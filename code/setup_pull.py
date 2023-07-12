@@ -11,7 +11,7 @@ import dataset
 
 db = dataset.connect("sqlite:///../data/db/data.db")
 # TODO 1: edit data/db/data.sqlite3 and add the sites you want to scrape into sites table
-site_table = db["sites"]
+site_table = db["sites_uttar_pradesh"]
 run_name = "run2_"  # leave this as it is
 
 for site_row in site_table:
@@ -34,33 +34,24 @@ for site_row in site_table:
     )
     table = db["request_status_data"]
 
-    fromDate = "01-01-2010"  # TODO 2: starting date (inclusive)
-    endDate = "31-12-2020"  # TODO 3: ending date (inclusive)
+    fromDate = "01-01-2018"  # TODO 2: starting date (inclusive)
+    endDate = "31-12-2022"  # TODO 3: ending date (inclusive)
     how_many_days = 10
 
     toDate = ""
     objFromDate = datetime.strptime(fromDate, "%d-%m-%Y")
+    objEndDate = datetime.strptime(endDate, "%d-%m-%Y")
     time_part = " T00:00:00Z"
     time_part_end = " T00:10:00Z"
     status_code = 1
 
     print(site_name)
     # print(data_availability)
-    while objFromDate <= datetime.strptime(endDate, "%d-%m-%Y"):
-        # print("####################################################")
-        objToDate = objFromDate + timedelta(days=how_many_days)
-        
-        # stop if this month's data is not available
-        current_month = objFromDate.strftime("%m-%Y")
-        # print(current_month)
-        if current_month not in data_availability:
-            objFromDate = objToDate
-            continue
 
-        fromDate = objFromDate.strftime("%d-%m-%Y") + time_part
-        toDate = objToDate.strftime("%d-%m-%Y") + time_part_end
+    fromDate = objFromDate.strftime("%d-%m-%Y") + time_part
+    toDate = objEndDate.strftime("%d-%m-%Y") + time_part_end
 
-        query_name = run_name + label + objFromDate.strftime("%Y%m%d")
+    query_name = run_name + label + objFromDate.strftime("%Y%m%d")
         # print(query_name)
         
         ## this query slows the code
@@ -71,10 +62,10 @@ for site_row in site_table:
         #     # print("EXISTS SO GO TO NEXT")
         #     continue
 
-        prompt_all = (
+    prompt_all = (
             '{"draw":1,"columns":[{"data":0,"name":"","searchable":true,"orderable":false,"search":{"value":"","regex":false}}],"order":[],"start":0,"length":30,"search":{"value":"","regex":false},"filtersToApply":{"parameter_list":'
             + params_query
-            + ',"criteria":"24 Hours","reportFormat":"Tabular","fromDate":"'
+            + ',"criteria":"Annual Average","reportFormat":"Tabular","fromDate":"'
             + fromDate
             + '","toDate":"'
             + toDate
@@ -91,25 +82,23 @@ for site_row in site_table:
             + '},"pagination":1}'
         )
 
-        data_to_encode = prompt_all
-        encoded_data = base64.b64encode(data_to_encode.encode("UTF8"))
+    data_to_encode = prompt_all
+    print(prompt_all)
+    encoded_data = base64.b64encode(data_to_encode.encode("UTF8"))
         # print(data_to_encode)
 
-        row = {}
-        row["query_name"] = query_name
-        row["fromDate"] = fromDate
-        row["toDate"] = toDate
-        row["state"] = state
-        row["city"] = city
-        row["site"] = site
-        row["site_name"] = site_name
-        row["data_to_encode"] = data_to_encode
-        row["encoded_data"] = encoded_data
-        row["status_code"] = status_code
-        row["parsed"] = 0
-        table.insert(row)
+    row = {}
+    row["query_name"] = query_name
+    row["fromDate"] = fromDate
+    row["toDate"] = toDate
+    row["state"] = state
+    row["city"] = city
+    row["site"] = site
+    row["site_name"] = site_name
+    row["data_to_encode"] = data_to_encode
+    row["encoded_data"] = encoded_data
+    row["status_code"] = status_code
+    row["parsed"] = 0
+    print(row)
+    table.insert(row)
 
-        # forward in date for next
-        objFromDate = objToDate
-        # print("_______________________________________________________________")
-        # end while
